@@ -1081,10 +1081,6 @@ static void fifty_hz_logging_loop()
         Log_Write_Attitude();
         Log_Write_Rate();
     }
-
-    if (should_log(MASK_LOG_IMU)) {
-        DataFlash.Log_Write_IMU(ins);
-    }
 #endif
 }
 
