@@ -2,7 +2,7 @@
 #include "AP_BattMonitor.h"
 #include "AP_BattMonitor_Analog.h"
 #include "AP_BattMonitor_SMBus.h"
-
+#include <stdio.h>
 extern const AP_HAL::HAL& hal;
 
 const AP_Param::GroupInfo AP_BattMonitor::var_info[] PROGMEM = {
@@ -118,8 +118,20 @@ const AP_Param::GroupInfo AP_BattMonitor::var_info[] PROGMEM = {
 // their values.
 //
 AP_BattMonitor::AP_BattMonitor(void) :
-    _num_instances(0)
+    _num_instances(0),
+    _ekf_x(BATTERY_EKF_STATES),
+    _ekf_Measure(BATTERY_EKF_MEAS)
 {
+    //EKF initialise
+    static const double P0[] = {   sq(20),   0   ,  0   ,
+                                    0     ,  sq(1),  0   ,
+                                    0     ,   0   , sq(0.2)};
+    _ekf_P0 = Matrix(BATTERY_EKF_STATES, BATTERY_EKF_STATES, P0);
+    _ekf_x(1) = 0.0;
+    _ekf_x(2) = 0.0;
+    _ekf_x(3) = 0.0;
+    _filter.init(_ekf_x, _ekf_P0);
+
     AP_Param::setup_object_defaults(this, var_info);
 }
 
@@ -164,6 +176,7 @@ AP_BattMonitor::init()
 void
 AP_BattMonitor::read()
 {
+    Vector u(3,0.0);
     // exit immediately if no monitors setup
     if (_num_instances == 0) {
         return;
@@ -172,6 +185,14 @@ AP_BattMonitor::read()
     for (uint8_t i=0; i<AP_BATT_MONITOR_MAX_INSTANCES; i++) {
         if (drivers[i] != NULL && _monitoring[i] != BattMonitor_TYPE_NONE) {
             drivers[i]->read();
+            if(i==0){
+                _ekf_Measure(1) = _BattMonitor_STATE(i).voltage;
+                _ekf_Measure(2) = _BattMonitor_STATE(i).current_amps;
+                _filter.step(u, _ekf_Measure);
+                _ekf_x = _filter.getX();
+                ::printf("Actual ===> V I D => %f %f %f \n",_ekf_x(1),_ekf_x(2),_ekf_x(3));
+                ::printf("EKF ===> V I D => %f %f %f \n\n",_ekf_Measure(1),_ekf_Measure(2),_ekf_Measure(1)/_ekf_Measure(2));
+            }
         }
     }
 }

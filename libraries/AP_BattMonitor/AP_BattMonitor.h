@@ -5,7 +5,7 @@
 #include <AP_Common.h>
 #include <AP_Param.h>
 #include <AP_Math.h>
-
+#include <BattEKF.h>
 // maximum number of battery monitors
 #define AP_BATT_MONITOR_MAX_INSTANCES       2
 
@@ -14,6 +14,9 @@
 
 #define AP_BATT_CAPACITY_DEFAULT            3300
 #define AP_BATT_LOW_VOLT_TIMEOUT_MS         10000   // low voltage of 10 seconds will cause battery_exhausted to return true
+
+#define BATTERY_EKF_MEAS    2
+#define BATTERY_EKF_STATES  3
 
 // declare backend class
 class AP_BattMonitor_Backend;
@@ -120,5 +123,11 @@ private:
     BattMonitor_State state[AP_BATT_MONITOR_MAX_INSTANCES];
     AP_BattMonitor_Backend *drivers[AP_BATT_MONITOR_MAX_INSTANCES];
     uint8_t     _num_instances;                                     /// number of monitors
+    //Battery EKF
+    Vector _ekf_x;
+    Vector _ekf_F;
+    Matrix _ekf_P0;
+    Vector _ekf_Measure;
+    BattEKF _filter;
 };
 #endif  // AP_BATTMONITOR_H
