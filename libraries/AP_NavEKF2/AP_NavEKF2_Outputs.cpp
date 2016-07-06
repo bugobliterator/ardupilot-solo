@@ -459,16 +459,17 @@ void  NavEKF2_core::getFilterStatus(nav_filter_status &status) const
 {
     // init return value
     status.value = 0;
-
     bool doingFlowNav = (PV_AidingMode == AID_RELATIVE) && flowDataValid;
     bool doingVisPosNav = (PV_AidingMode == AID_VISPOS) && visPosDataValid;
     bool doingWindRelNav = !tasTimeout && assume_zero_sideslip();
     bool doingNormalGpsNav = !posTimeout && (PV_AidingMode == AID_ABSOLUTE);
     bool someVertRefData = (!velTimeout && useGpsVertVel) || !hgtTimeout;
-    bool someHorizRefData = !(velTimeout && posTimeout && tasTimeout) || doingFlowNav || doingVisPosNav;
-    bool optFlowNavPossible = flowDataValid && (frontend->_fusionModeGPS == 3);
-    bool visPosNavPossible = visPosDataValid && (frontend->_fusionModeGPS == 4);
-    bool gpsNavPossible = !gpsNotAvailable && gpsGoodToAlign;
+
+    bool someHorizRefData = !(velTimeout && posTimeout && tasTimeout) || doingFlowNav;
+    bool optFlowNavPossible = flowDataValid && (frontend->_fusionModeGPS == 3) && delAngBiasLearned;
+    bool visPosNavPossible = visPosDataValid && (frontend->_fusionModeGPS == 4) && delAngBiasLearned;
+    bool gpsNavPossible = !gpsNotAvailable && gpsGoodToAlign && delAngBiasLearned;
+
     bool filterHealthy = healthy() && tiltAlignComplete && (yawAlignComplete || (!use_compass() && (PV_AidingMode == AID_NONE)));
     //printf("VISPOS HEALTH %d %d %d\n", visPosDataValid, PV_AidingMode,frontend->_fusionModeGPS);
     // If GPS height usage is specified, height is considered to be inaccurate until the GPS passes all checks

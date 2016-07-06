@@ -273,6 +273,7 @@ void NavEKF2_core::InitialiseVariables()
     yawInnovAtLastMagReset = 0.0f;
     quatAtLastMagReset = stateStruct.quat;
     magFieldLearned = false;
+    delAngBiasLearned = false;
 
     // zero data buffers
     storedIMU.reset();
