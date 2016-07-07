@@ -539,11 +539,15 @@ def run_in_terminal_window(autotest, name, cmd):
     runme = [os.path.join(autotest, "run_in_terminal_window.sh"), name]
     runme.extend(cmd)
     progress_cmd("Run " + name, runme)
-    out = subprocess.Popen(runme,stdout=subprocess.PIPE).communicate()[0] # bg this explicitly?!
+
     if sys.platform == 'darwin':
+        # on MacOS record the window IDs so we can close them later
+        out = subprocess.Popen(runme,stdout=subprocess.PIPE).communicate()[0]
         import re
         p = re.compile('tab 1 of window id (.*)')
         windowID.append(p.findall(out)[0])
+    else:
+        p = subprocess.Popen(runme)
 
 tracker_uarta = None # blemish
 
