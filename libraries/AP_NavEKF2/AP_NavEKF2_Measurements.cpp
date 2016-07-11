@@ -137,6 +137,37 @@ void NavEKF2_core::writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRa
     }
 }
 
+/********************************************************
+*                      VISUAL POSITION                  *
+********************************************************/
+void NavEKF2_core::writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas)
+{
+    visPosMeaTime_ms = msecVisPosMeas;
+    if (frontend->_fusionModeGPS == 4) {
+        //check for vispos assisted takeoff
+    }
+    stateStruct.quat.rotation_matrix(Tbn_vispos);
+    Tnb_vispos = Tbn_vispos.transposed();
+
+    // write vispos measurements
+    visPosDataNew.pos = Position;
+    // record time last observation was received so we can detect loss of data elsewhere
+    visPosValidMeaTime_ms = imuSampleTime_ms;
+    // estimate sample time of the measurement
+    visPosDataNew.time_ms = msecVisPosMeas;
+    // Prevent time delay exceeding age of oldest IMU data in the buffer
+    visPosDataNew.time_ms = MAX(visPosDataNew.time_ms,imuDataDelayed.time_ms);
+    // Save data to buffer
+    storedVP.push(visPosDataNew);
+    /*printf("Buffered Times: ");
+    for(int i=storedVP._tail; i <= storedVP._head;i++) {
+        printf("%d ",storedVP.buffer[i]);
+    }
+    printf(" current time: %d \n", imuDataDelayed.time_ms);*/
+    //printf("Received Data! %d %d SHT: %d,%d,%d\n", msecVisPosMeas, imuDataDelayed.time_ms, storedVP._size,storedVP._head,storedVP._tail);
+    // Check for data at the fusion time horizon
+    visPosDataToFuse = storedVP.recall(visPosDataDelayed, imuDataDelayed.time_ms);
+}
 
 /********************************************************
 *                      MAGNETOMETER                     *
@@ -453,7 +484,7 @@ void NavEKF2_core::readGpsData()
 
     // check if we can use opticalflow as a backup
     bool optFlowBackupAvailable = (flowDataValid && !hgtTimeout);
-
+    bool visPosBackupAvailable = visPosDataValid;
     // Set GPS time-out threshold depending on whether we have an airspeed sensor to constrain drift
     uint16_t gpsRetryTimeout_ms = useAirspeed() ? frontend->gpsRetryTimeUseTAS_ms : frontend->gpsRetryTimeNoTAS_ms;
 
@@ -476,6 +507,10 @@ void NavEKF2_core::readGpsData()
                 // we can do optical flow only nav
                 frontend->_fusionModeGPS = 3;
                 PV_AidingMode = AID_RELATIVE;
+            } else if (visPosBackupAvailable) {
+                // we can do visual position only nav
+                frontend->_fusionModeGPS = 4;
+                PV_AidingMode = AID_VISPOS;
             } else {
                 // store the current position
                 lastKnownPositionNE.x = stateStruct.position.x;

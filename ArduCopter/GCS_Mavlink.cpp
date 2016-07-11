@@ -969,7 +969,11 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
         copter.pmTest1++;
         break;
     }
-
+    case MAVLINK_MSG_ID_PING:
+    {
+        mavlink_msg_ping_send(chan, AP_HAL::micros(),0,0,0);
+        break;
+    }
     case MAVLINK_MSG_ID_SET_MODE:       // MAV ID: 11
     {
 #ifdef DISALLOW_GCS_MODE_CHANGE_DURING_RC_FAILSAFE
@@ -1677,6 +1681,11 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
         break;
     }
 
+    case MAVLINK_MSG_ID_LOCAL_POSITION_NED:
+    {
+        copter.vispos.handle_raw_vispos_report(chan, msg);
+    }
+
     case MAVLINK_MSG_ID_SET_POSITION_TARGET_LOCAL_NED:     // MAV ID: 84
     {
         // decode packet
@@ -1833,11 +1842,7 @@ void GCS_MAVLINK_Copter::handleMessage(mavlink_message_t* msg)
 
         break;
     }
-    case MAVLINK_MSG_ID_RAW_POS_ATT:
-    {
-        copter.vispos.handle_raw_vispos_report(chan, msg);
-        break;
-    }
+
     case MAVLINK_MSG_ID_DISTANCE_SENSOR:
     {
         result = MAV_RESULT_ACCEPTED;

@@ -24,6 +24,7 @@
 #include <SITL/SIM_Gimbal.h>
 #include <SITL/SIM_ADSB.h>
 #include <AP_HAL/utility/Socket.h>
+#include <AP_VisPos/AP_VisPos.h>
 
 class HAL_SITL;
 

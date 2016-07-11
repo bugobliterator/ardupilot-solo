@@ -149,9 +149,10 @@ void NavEKF2_core::setAidingMode()
     bool filterIsStable = tiltAlignComplete && yawAlignComplete;
     // If GPS usage has been prohiited then we use flow aiding provided optical flow data is present
     bool useFlowAiding = (frontend->_fusionModeGPS == 3) && optFlowDataPresent();
+    bool useVisPosAiding = (frontend->_fusionModeGPS == 4) && visPosDataPresent();
     // Start aiding if we have a source of aiding data and the filter attitude algnment is complete
     // Latch to on
-    isAiding = ((readyToUseGPS() || useFlowAiding) && filterIsStable) || isAiding;
+    isAiding = ((readyToUseGPS() || useFlowAiding || useVisPosAiding) && filterIsStable) || isAiding;
 
     // check to see if we are starting or stopping aiding and set states and modes as required
     if (isAiding != prevIsAiding) {
@@ -183,7 +184,17 @@ void NavEKF2_core::setAidingMode()
             flowValidMeaTime_ms = imuSampleTime_ms;
             // Reset the last valid flow fusion time
             prevFlowFuseTime_ms = imuSampleTime_ms;
-        } else {
+        } else if (frontend->_fusionModeGPS==4) {
+            // We have commenced aiding, but GPS usage has been prohibited so use optical flow only
+            hal.console->printf("EKF2 IMU%u is using Visual position\n",(unsigned)imu_index);
+            PV_AidingMode = AID_VISPOS; // we have optical flow data and can estimate all vehicle states
+            posTimeout = true;
+            velTimeout = true;
+            // Reset the last valid flow measurement time
+            visPosValidMeaTime_ms = imuSampleTime_ms;
+            // Reset the last valid flow fusion time
+            prevVisPosFuseTime_ms = imuSampleTime_ms;
+        } else{
             // We have commenced aiding and GPS usage is allowed
             hal.console->printf("EKF2 IMU%u is using GPS\n",(unsigned)imu_index);
             PV_AidingMode = AID_ABSOLUTE; // we have GPS data and can estimate all vehicle states
@@ -201,7 +212,6 @@ void NavEKF2_core::setAidingMode()
         ResetPosition();
 
     }
-
     // Always turn aiding off when the vehicle is disarmed
     if (!isAiding) {
         PV_AidingMode = AID_NONE;
@@ -252,6 +262,12 @@ bool NavEKF2_core::useRngFinder(void) const
 bool NavEKF2_core::optFlowDataPresent(void) const
 {
     return (imuSampleTime_ms - flowMeaTime_ms < 200);
+}
+
+// return true if optical flow data is available
+bool NavEKF2_core::visPosDataPresent(void) const
+{
+    return (imuSampleTime_ms - visPosMeaTime_ms < 200);
 }
 
 // return true if the filter to be ready to use gps

@@ -164,8 +164,6 @@ private:
 
     AP_GPS gps;
 
-    AP_VisPos vispos{DataFlash};
-
     // flight modes convenience array
     AP_Int8 *flight_modes;
 
@@ -186,8 +184,10 @@ private:
 
     // Inertial Navigation EKF
     NavEKF EKF{&ahrs, barometer, rangefinder};
-    NavEKF2 EKF2{&ahrs, barometer, rangefinder, vispos};
+    NavEKF2 EKF2{&ahrs, barometer, rangefinder};
     AP_AHRS_NavEKF ahrs{ins, barometer, gps, rangefinder, EKF, EKF2, AP_AHRS_NavEKF::FLAG_ALWAYS_USE_EKF};
+
+    AP_VisPos vispos{DataFlash, ahrs};
 
 #if CONFIG_HAL_BOARD == HAL_BOARD_SITL
     SITL::SITL sitl;

@@ -180,6 +180,8 @@ public:
     // msecFlowMeas is the scheduler time in msec when the optical flow data was received from the sensor.
     void  writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, Vector2f &rawGyroRates, uint32_t &msecFlowMeas);
 
+    void writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas);
+
     // return data for debugging optical flow fusion
     void getFlowDebug(float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr) const;
 
@@ -384,6 +386,12 @@ private:
         uint32_t    time_ms;        // 4
     };
 
+
+    struct vp_elements {
+        Vector2f    pos;      // 0..1
+        uint32_t    time_ms;  // 3
+    };
+
     // update the quaternion, velocity and position states using IMU measurements
     void UpdateStrapdownEquationsNED();
 
@@ -554,6 +562,10 @@ private:
     // fuse optical flow measurements into the main filter
     void FuseOptFlow();
 
+    //Visual Position measurement and fusion functions
+    void SelectVisPosFusion();
+    void FuseVisPos();
+    bool visPosDataPresent(void) const;
     // Control filter mode changes
     void controlFilterModes();
 
@@ -630,6 +642,8 @@ private:
     // Length of FIFO buffers used for non-IMU sensor data.
     // Must be larger than the time period defined by IMU_BUFFER_LENGTH
     static const uint32_t OBS_BUFFER_LENGTH = 5;
+    //use higher size buffer due to higher rate and highly delayed incoming data
+    static const uint32_t VIS_OBS_BUFFER_LENGTH = 20;
 
     // Variables
     bool statesInitialised;         // boolean true when filter states have been initialised
@@ -820,6 +834,26 @@ private:
     float innovationIncrement;
     float lastInnovation;
 
+    //variables for vispos data fusion
+    Matrix3f Tnb_vispos;            // transformation matrix from nav to body axes at the middle of the visual Position sample period
+    Matrix3f Tbn_vispos;            // transformation matrix from body to nav axes at the middle of the visual Position sample period
+    Vector2 varInnovVisPos;         // visual position innovations variances (rad/sec)^2
+    Vector2 innovVisPos;            // visual position LOS innovations (rad/sec)
+    Vector2 flowTestRatio;          // square of Visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
+    Vector2 visPosTestRatio;        // square of visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
+    bool visPosDataToFuse;          // true when Visual Position data has is ready for fusion
+    bool visPosDataValid;           // true while Visual Position data is still fresh
+    bool visPosFusionDelayed;
+    bool fuseVisPosData;
+    uint32_t prevVisPosFuseTime_ms;
+    uint32_t visPosMeaTime_ms;
+    uint32_t visPosValidMeaTime_ms;
+    uint8_t vpStoreIndex;           // VP data storage index
+    obs_ring_buffer_t<vp_elements> storedVP;    // VP data buffer
+    vp_elements visPosDataNew;          // OF data at the current time horizon
+    vp_elements visPosDataDelayed;      // OF data at the fusion time horizon
+    float R_LPOS;
+
     // variables added for optical flow fusion
     obs_ring_buffer_t<of_elements> storedOF;    // OF data buffer
     of_elements ofDataNew;          // OF data at the current time horizon
@@ -850,7 +884,6 @@ private:
     float hgtMea;                   // height measurement derived from either baro, gps or range finder data (m)
     bool inhibitGndState;           // true when the terrain position state is to remain constant
     uint32_t prevFlowFuseTime_ms;   // time both flow measurement components passed their innovation consistency checks
-    Vector2 flowTestRatio;          // square of optical flow innovations divided by fail threshold used by main filter where >1.0 is a fail
     float auxFlowTestRatio;         // sum of squares of optical flow innovation divided by fail threshold used by 1-state terrain offset estimator
     float R_LOS;                    // variance of optical flow rate measurements (rad/sec)^2
     float auxRngTestRatio;          // square of range finder innovations divided by fail threshold used by main filter where >1.0 is a fail
@@ -862,7 +895,8 @@ private:
     Vector2f heldVelNE;             // velocity held when no aiding is available
     enum AidingMode {AID_ABSOLUTE=0,    // GPS aiding is being used (optical flow may also be used) so position estimates are absolute.
                      AID_NONE=1,       // no aiding is being used so only attitude and height estimates are available. Either constVelMode or constPosMode must be used to constrain tilt drift.
-                     AID_RELATIVE=2    // only optical flow aiding is being used so position estimates will be relative
+                     AID_RELATIVE=2,    // only optical flow aiding is being used so position estimates will be relative
+                     AID_VISPOS=4
                     };
     AidingMode PV_AidingMode;           // Defines the preferred mode for aiding of velocity and position estimates from the INS
     bool gndOffsetValid;            // true when the ground offset state can still be considered valid
@@ -916,6 +950,8 @@ private:
         bool bad_decl:1;
         bool bad_xflow:1;
         bool bad_yflow:1;
+        bool bad_xvispos:1;
+        bool bad_yvispos:1;
     } faultStatus;
 
     // flags indicating which GPS quality checks are failing
@@ -966,6 +1002,7 @@ private:
     AP_HAL::Util::perf_counter_t  _perf_FuseSideslip;
     AP_HAL::Util::perf_counter_t  _perf_TerrainOffset;
     AP_HAL::Util::perf_counter_t  _perf_FuseOptFlow;
+    AP_HAL::Util::perf_counter_t  _perf_FuseVisPos;
     AP_HAL::Util::perf_counter_t  _perf_test[10];
 
     // should we assume zero sideslip?

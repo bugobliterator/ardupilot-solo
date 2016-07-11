@@ -38,8 +38,9 @@ const AP_Param::GroupInfo AP_VisPos::var_info[] = {
 
    AP_GROUPEND
 };
-AP_VisPos::AP_VisPos(DataFlash_Class &dataflash) :
-_dataflash(dataflash)
+AP_VisPos::AP_VisPos(DataFlash_Class &dataflash, AP_AHRS_NavEKF &ahrs) :
+_dataflash(dataflash),
+_ahrs(ahrs)
 {
     _backend = NULL;
 }
@@ -50,7 +51,9 @@ void AP_VisPos::init(void)
    printf("Initialising Visual Positioning....\n");
 	if(_vispos_type == VISPOS_TYPE_HIL) {
 		_backend = new AP_VisPos_HIL(this);
-	}
+	} else if (_vispos_type == VISPOS_TYPE_MAV) {
+      _backend = new AP_VisPos_MAVLink(this);
+   }
 }
 
 void AP_VisPos::handle_raw_vispos_report(mavlink_channel_t chan, mavlink_message_t *msg)
@@ -75,5 +78,6 @@ void AP_VisPos::setHIL(Vector3f raw_pos, uint32_t timestamp_ms)
    if (_backend) {
    	_backend->set_local_pos(raw_pos);
    	_backend->set_last_pos_msg_time_ms(timestamp_ms);
+      _ahrs.get_NavEKF2().writeVisPosMeas(Vector2f(raw_pos.x,raw_pos.y), timestamp_ms);
    }
 }

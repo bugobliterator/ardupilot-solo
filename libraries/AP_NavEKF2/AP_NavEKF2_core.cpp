@@ -40,7 +40,8 @@ NavEKF2_core::NavEKF2_core(void) :
     _perf_FuseAirspeed(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_FuseAirspeed")),
     _perf_FuseSideslip(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_FuseSideslip")),
     _perf_TerrainOffset(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_TerrainOffset")),
-    _perf_FuseOptFlow(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_FuseOptFlow"))
+    _perf_FuseOptFlow(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_FuseOptFlow")),
+    _perf_FuseVisPos(hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_FuseVisPos"))
 {
     _perf_test[0] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_Test0");
     _perf_test[1] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_Test1");
@@ -52,6 +53,7 @@ NavEKF2_core::NavEKF2_core(void) :
     _perf_test[7] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_Test7");
     _perf_test[8] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_Test8");
     _perf_test[9] = hal.util->perf_alloc(AP_HAL::Util::PC_ELAPSED, "EK2_Test9");
+
 }
 
 // setup this core backend
@@ -87,6 +89,9 @@ bool NavEKF2_core::setup_core(NavEKF2 *_frontend, uint8_t _imu_index, uint8_t _c
         return false;
     }
     if(!storedOF.init(OBS_BUFFER_LENGTH)) {
+        return false;
+    }
+    if(!storedVP.init(VIS_OBS_BUFFER_LENGTH)) {
         return false;
     }
     if(!storedRange.init(OBS_BUFFER_LENGTH)) {
@@ -135,6 +140,9 @@ void NavEKF2_core::InitialiseVariables()
     rngValidMeaTime_ms = imuSampleTime_ms;
     flowMeaTime_ms = 0;
     prevFlowFuseTime_ms = imuSampleTime_ms;
+    visPosValidMeaTime_ms = imuSampleTime_ms;
+    visPosMeaTime_ms = 0;
+    prevVisPosFuseTime_ms = imuSampleTime_ms;
     gndHgtValidTime_ms = 0;
     ekfStartTime_ms = imuSampleTime_ms;
     lastGpsVelFail_ms = 0;
@@ -167,6 +175,8 @@ void NavEKF2_core::InitialiseVariables()
     flowDataValid = false;
     rangeDataToFuse  = false;
     fuseOptFlowData = false;
+    visPosDataValid = false;
+    fuseVisPosData = false;
     Popt = 0.0f;
     terrainState = 0.0f;
     prevPosN = stateStruct.position.x;
@@ -241,6 +251,7 @@ void NavEKF2_core::InitialiseVariables()
     optFlowFusionDelayed = false;
     airSpdFusionDelayed = false;
     sideSlipFusionDelayed = false;
+    visPosFusionDelayed = false;
     posResetNE.zero();
     velResetNE.zero();
     hgtInnovFiltState = 0.0f;
@@ -450,6 +461,9 @@ void NavEKF2_core::UpdateFilter(bool predict)
 
         // Update states using GPS and altimeter data
         SelectVelPosFusion();
+
+        // Update states using Vis Pos data
+        SelectVisPosFusion();
 
         // Update states using optical flow data
         SelectFlowFusion();

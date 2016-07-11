@@ -7,7 +7,6 @@
 #include <AP_Vehicle/AP_Vehicle.h>
 #include <GCS_MAVLink/GCS.h>
 #include <DataFlash/DataFlash.h>
-#include <AP_VisPos/AP_VisPos.h>
 
 /*
   parameter defaults for different types of vehicle. The
@@ -37,6 +36,9 @@
 #define FLOW_MEAS_DELAY         10
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
+#define VISPOS_MEAS_DELAY       0
+#define VISPOS_M_NSE_DEFAULT    0.01f
+#define VISPOS_I_GATE_DEFAULT   300
 #define CHECK_SCALER_DEFAULT    100
 
 #elif APM_BUILD_TYPE(APM_BUILD_APMrover2)
@@ -62,6 +64,9 @@
 #define FLOW_MEAS_DELAY         10
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
+#define VISPOS_MEAS_DELAY       0
+#define VISPOS_M_NSE_DEFAULT    0.01f
+#define VISPOS_I_GATE_DEFAULT   300
 #define CHECK_SCALER_DEFAULT    100
 
 #elif APM_BUILD_TYPE(APM_BUILD_ArduPlane)
@@ -87,6 +92,9 @@
 #define FLOW_MEAS_DELAY         10
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
+#define VISPOS_MEAS_DELAY       0
+#define VISPOS_M_NSE_DEFAULT    0.01f
+#define VISPOS_I_GATE_DEFAULT   300
 #define CHECK_SCALER_DEFAULT    150
 
 #else
@@ -112,6 +120,9 @@
 #define FLOW_MEAS_DELAY         10
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
+#define VISPOS_MEAS_DELAY       0
+#define VISPOS_M_NSE_DEFAULT    0.01f
+#define VISPOS_I_GATE_DEFAULT   300
 #define CHECK_SCALER_DEFAULT    100
 
 #endif // APM_BUILD_DIRECTORY
@@ -133,7 +144,7 @@ const AP_Param::GroupInfo NavEKF2::var_info[] = {
     // @Param: GPS_TYPE
     // @DisplayName: GPS mode control
     // @Description: This controls use of GPS measurements : 0 = use 3D velocity & 2D position, 1 = use 2D velocity and 2D position, 2 = use 2D position, 3 = use no GPS (optical flow will be used if available)
-    // @Values: 0:GPS 3D Vel and 2D Pos, 1:GPS 2D vel and 2D pos, 2:GPS 2D pos, 3:No GPS use optical flow
+    // @Values: 0:GPS 3D Vel and 2D Pos, 1:GPS 2D vel and 2D pos, 2:GPS 2D pos, 3:No GPS use optical flow, 4:No GPS use visual Pos
     // @User: Advanced
     AP_GROUPINFO("GPS_TYPE", 1, NavEKF2, _fusionModeGPS, 0),
 
@@ -477,14 +488,39 @@ const AP_Param::GroupInfo NavEKF2::var_info[] = {
     // @Units: gauss/s
     AP_GROUPINFO("MAGB_P_NSE", 41, NavEKF2, _magBodyProcessNoise, MAGB_P_NSE_DEFAULT),
 
+    // @Param: VISPOS_M_NSE
+    // @DisplayName: Visual Position measurement noise (rad/s)
+    // @Description: This is the RMS value of noise and errors in visual position measurements. Increasing it reduces the weighting on these measurements.
+    // @Range: 0.05 1.0
+    // @Increment: 0.05
+    // @User: Advanced
+    // @Units: rad/s
+    AP_GROUPINFO("VPOS_M_NSE", 42, NavEKF2, _visPosNoise, VISPOS_M_NSE_DEFAULT),
+
+    // @Param: VISPOS_I_GATE
+    // @DisplayName: Visual Position measurement gate size
+    // @Description: This sets the percentage number of standard deviations applied to the visual postion innovation consistency check. Decreasing it makes it more likely that good measurements will be rejected. Increasing it makes it more likely that bad measurements will be accepted.
+    // @Range: 100 1000
+    // @Increment: 25
+    // @User: Advanced
+    AP_GROUPINFO("VPOS_I_GATE", 43, NavEKF2, _visPosInnovGate, VISPOS_I_GATE_DEFAULT),
+
+    // @Param: VISPOS_DELAY
+    // @DisplayName: Visual Position measurement delay (msec)
+    // @Description: This is the number of msec that the visual position measurements lag behind the inertial measurements. It is the time from the end of the optical flow averaging period and does not include the time delay due to the 100msec of averaging within the flow sensor.
+    // @Range: 0 250
+    // @Increment: 10
+    // @User: Advanced
+    // @Units: msec
+    AP_GROUPINFO("VPOS_DELAY", 44, NavEKF2, _visPosDelay_ms, VISPOS_MEAS_DELAY),
+
     AP_GROUPEND
 };
 
-NavEKF2::NavEKF2(const AP_AHRS *ahrs, AP_Baro &baro, const RangeFinder &rng, AP_VisPos &vispos) :
+NavEKF2::NavEKF2(const AP_AHRS *ahrs, AP_Baro &baro, const RangeFinder &rng) :
     _ahrs(ahrs),
     _baro(baro),
     _rng(rng),
-    _vispos(vispos),
     gpsNEVelVarAccScale(0.05f),     // Scale factor applied to horizontal velocity measurement variance due to manoeuvre acceleration - used when GPS doesn't report speed error
     gpsDVelVarAccScale(0.07f),      // Scale factor applied to vertical velocity measurement variance due to manoeuvre acceleration - used when GPS doesn't report speed error
     gpsPosVarAccScale(0.05f),       // Scale factor applied to horizontal position measurement variance due to manoeuvre acceleration
@@ -980,6 +1016,15 @@ void NavEKF2::writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, 
     if (core) {
         for (uint8_t i=0; i<num_cores; i++) {
             core[i].writeOptFlowMeas(rawFlowQuality, rawFlowRates, rawGyroRates, msecFlowMeas);
+        }
+    }
+}
+
+void NavEKF2::writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas)
+{
+    if (core) {
+        for (uint8_t i=0; i<num_cores; i++) {
+            core[i].writeVisPosMeas(Position, msecVisPosMeas);
         }
     }
 }

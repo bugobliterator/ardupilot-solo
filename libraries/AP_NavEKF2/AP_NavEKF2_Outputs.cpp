@@ -461,27 +461,29 @@ void  NavEKF2_core::getFilterStatus(nav_filter_status &status) const
     status.value = 0;
 
     bool doingFlowNav = (PV_AidingMode == AID_RELATIVE) && flowDataValid;
+    bool doingVisPosNav = (PV_AidingMode == AID_VISPOS) && visPosDataValid;
     bool doingWindRelNav = !tasTimeout && assume_zero_sideslip();
     bool doingNormalGpsNav = !posTimeout && (PV_AidingMode == AID_ABSOLUTE);
     bool someVertRefData = (!velTimeout && useGpsVertVel) || !hgtTimeout;
-    bool someHorizRefData = !(velTimeout && posTimeout && tasTimeout) || doingFlowNav;
+    bool someHorizRefData = !(velTimeout && posTimeout && tasTimeout) || doingFlowNav || doingVisPosNav;
     bool optFlowNavPossible = flowDataValid && (frontend->_fusionModeGPS == 3);
+    bool visPosNavPossible = visPosDataValid && (frontend->_fusionModeGPS == 4);
     bool gpsNavPossible = !gpsNotAvailable && gpsGoodToAlign;
     bool filterHealthy = healthy() && tiltAlignComplete && (yawAlignComplete || (!use_compass() && (PV_AidingMode == AID_NONE)));
+    //printf("VISPOS HEALTH %d %d %d\n", visPosDataValid, PV_AidingMode,frontend->_fusionModeGPS);
     // If GPS height usage is specified, height is considered to be inaccurate until the GPS passes all checks
     bool hgtNotAccurate = (frontend->_altSource == 2) && !validOrigin;
-
     // set individual flags
     status.flags.attitude = !stateStruct.quat.is_nan() && filterHealthy;   // attitude valid (we need a better check)
     status.flags.horiz_vel = someHorizRefData && filterHealthy;      // horizontal velocity estimate valid
     status.flags.vert_vel = someVertRefData && filterHealthy;        // vertical velocity estimate valid
-    status.flags.horiz_pos_rel = ((doingFlowNav && gndOffsetValid) || doingWindRelNav || doingNormalGpsNav) && filterHealthy;   // relative horizontal position estimate valid
-    status.flags.horiz_pos_abs = doingNormalGpsNav && filterHealthy; // absolute horizontal position estimate valid
+    status.flags.horiz_pos_rel = (doingVisPosNav || (doingFlowNav && gndOffsetValid) || doingWindRelNav || doingNormalGpsNav) && filterHealthy;   // relative horizontal position estimate valid
+    status.flags.horiz_pos_abs = (doingVisPosNav || doingNormalGpsNav) && filterHealthy; // absolute horizontal position estimate valid
     status.flags.vert_pos = !hgtTimeout && filterHealthy && !hgtNotAccurate; // vertical position estimate valid
     status.flags.terrain_alt = gndOffsetValid && filterHealthy;		// terrain height estimate valid
     status.flags.const_pos_mode = (PV_AidingMode == AID_NONE) && filterHealthy;     // constant position mode
-    status.flags.pred_horiz_pos_rel = ((optFlowNavPossible || gpsNavPossible) && filterHealthy) || status.flags.horiz_pos_rel; // we should be able to estimate a relative position when we enter flight mode
-    status.flags.pred_horiz_pos_abs = (gpsNavPossible && filterHealthy) || status.flags.horiz_pos_abs; // we should be able to estimate an absolute position when we enter flight mode
+    status.flags.pred_horiz_pos_rel = ((optFlowNavPossible || gpsNavPossible || visPosNavPossible) && filterHealthy) || status.flags.horiz_pos_rel; // we should be able to estimate a relative position when we enter flight mode
+    status.flags.pred_horiz_pos_abs = ((gpsNavPossible || visPosNavPossible) && filterHealthy) || status.flags.horiz_pos_abs; // we should be able to estimate an absolute position when we enter flight mode
     status.flags.takeoff_detected = takeOffDetected; // takeoff for optical flow navigation has been detected
     status.flags.takeoff = expectGndEffectTakeoff; // The EKF has been told to expect takeoff and is in a ground effect mitigation mode
     status.flags.touchdown = expectGndEffectTouchdown; // The EKF has been told to detect touchdown and is in a ground effect mitigation mode

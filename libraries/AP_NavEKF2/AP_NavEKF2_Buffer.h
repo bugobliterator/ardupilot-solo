@@ -108,7 +108,7 @@ public:
         memset(buffer,0,_size*sizeof(element_t));
     }
 
-private:
+//private:
     uint8_t _size,_head,_tail,_new_data;
 };
 
