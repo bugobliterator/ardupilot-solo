@@ -78,6 +78,14 @@ void NavEKF2_core::getFlowDebug(float &varFlow, float &gndOffset, float &flowInn
     gndOffsetErr = sqrtf(Popt); // note Popt is constrained to be non-negative in EstimateTerrainOffset()
 }
 
+// return data for debugging visual position fusion
+void NavEKF2_core::getVisPosDebug(float &varVisPos, float &visPosInnovX, float &visPosInnovY)
+{
+    varVisPos = MAX(visPosTestRatio[0],visPosTestRatio[1]);
+    visPosInnovX = innovVisPos[0];
+    visPosInnovY = innovVisPos[1];
+}
+
 // provides the height limit to be observed by the control loops
 // returns false if no height limiting is required
 // this is needed to ensure the vehicle does not fly too high when using optical flow navigation

@@ -103,7 +103,10 @@ public:
     const Vector3f &get_mag_field_bf(void) const {
         return mag_bf;
     }
-    
+
+    const Vector3f &get_position(void) const {
+        return position;
+    }
 protected:
     SITL *sitl;
     Location home;

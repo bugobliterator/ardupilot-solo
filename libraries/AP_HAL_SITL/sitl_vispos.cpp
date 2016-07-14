@@ -23,6 +23,7 @@ extern const AP_HAL::HAL& hal;
 #include <stdint.h>
 #include <cmath>
 #include <AP_VisPos/AP_VisPos.h>
+#include <AP_Math/vector3.h>
 void SITL_State::_update_vispos(void)
 {
 	Vector3f gyro;
@@ -40,16 +41,10 @@ void SITL_State::_update_vispos(void)
     }
     last_flow_ms = now;
     Vector3f lpos;
-    Quaternion Qef2bf;
-    struct Location location;
-    location.lat = _sitl->state.latitude*1.0e7;
-    location.lng = _sitl->state.longitude*1.0e7;
-    Vector2f posne(location_diff(sitl_model->get_home(), location));
-    lpos(posne.x, posne.y, _sitl->state.altitude);
-    Qef2bf.from_euler(radians(_sitl->state.rollDeg),
-                      radians(_sitl->state.pitchDeg),
-                      radians(_sitl->state.yawDeg));
-    Qef2bf.earth_to_body(lpos);
+
+    lpos = sitl_model->get_position();
+    lpos = lpos*(-1.0f);
+    lpos = sitl_model->get_dcm().transposed()*lpos;
     _vispos->setHIL(lpos, now);
 }
 

@@ -275,6 +275,7 @@ void NavEKF2_core::EstimateTerrainOffset()
 */
 void NavEKF2_core::FuseOptFlow()
 {
+    printf("Got Here!! OptFlow\n");
     Vector24 H_LOS;
     Vector3f relVelSensor;
     Vector14 SH_LOS;

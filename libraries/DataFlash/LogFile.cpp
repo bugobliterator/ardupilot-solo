@@ -1440,6 +1440,23 @@ void DataFlash_Class::Log_Write_EKF2(AP_AHRS_NavEKF &ahrs, bool optFlowEnabled)
      };
     WriteBlock(&pkt5, sizeof(pkt5));
 
+    // Write sixth EKF packet - take data from the primary instance
+    normInnov=0; // normalised innovation variance ratio for vispos observations fused by the main nav filter
+    float visPosInnovX=0, visPosInnovY=0; // vis local pos innovations from the main nav filter
+    ahrs.get_NavEKF2().getVisPosDebug(-1,normInnov, visPosInnovX, visPosInnovY);
+    ahrs.get_NavEKF2().getOutputTrackingError(-1,predictorErrors);
+    struct log_VPKF vpkf = {
+        LOG_PACKET_HEADER_INIT(LOG_VPKF_MSG),
+        time_us : time_us,
+        normInnov : (uint16_t)(100*normInnov),
+        VIX : (float)(visPosInnovX),
+        VIY : (float)(visPosInnovY),
+        angErr : (float)predictorErrors.x,
+        velErr : (float)predictorErrors.y,
+        posErr : (float)predictorErrors.z
+     };
+    WriteBlock(&vpkf, sizeof(vpkf));
+
     // log innovations for the second IMU if enabled
     if (ahrs.get_NavEKF2().activeCores() >= 2) {
         // Write 6th EKF packet

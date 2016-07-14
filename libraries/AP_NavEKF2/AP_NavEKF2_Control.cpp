@@ -215,7 +215,7 @@ void NavEKF2_core::setAidingMode()
             visPosValidMeaTime_ms = imuSampleTime_ms;
             // Reset the last valid flow fusion time
             prevVisPosFuseTime_ms = imuSampleTime_ms;
-        } else{
+        } else {
             // We have commenced aiding and GPS usage is allowed
             hal.console->printf("EKF2 IMU%u is using GPS\n",(unsigned)imu_index);
             PV_AidingMode = AID_ABSOLUTE; // we have GPS data and can estimate all vehicle states

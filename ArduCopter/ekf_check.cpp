@@ -98,7 +98,6 @@ bool Copter::ekf_over_threshold()
 
     // return true immediately if position is bad
     if (!ekf_position_ok() && !optflow_position_ok()) {
-        printf("EKF POS FAIL\n");
         return true;
     }
 
@@ -110,7 +109,6 @@ bool Copter::ekf_over_threshold()
     float vel_variance;
     ahrs.get_variances(vel_variance, posVar, hgtVar, magVar, tasVar, offset);
     compass_variance = magVar.length();
-    printf("EKF VEL FAIL %f\n", vel_variance);
     // return true if compass and velocity variance over the threshold
     return (compass_variance >= g.fs_ekf_thresh && vel_variance >= g.fs_ekf_thresh);
 }

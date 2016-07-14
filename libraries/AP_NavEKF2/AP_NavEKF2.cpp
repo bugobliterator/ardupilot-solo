@@ -15,9 +15,9 @@
  */
 #if APM_BUILD_TYPE(APM_BUILD_ArduCopter) || APM_BUILD_TYPE(APM_BUILD_Replay)
 // copter defaults
-#define VELNE_M_NSE_DEFAULT     0.5f
+#define VELNE_M_NSE_DEFAULT     1.0f
 #define VELD_M_NSE_DEFAULT      0.7f
-#define POSNE_M_NSE_DEFAULT     1.0f
+#define POSNE_M_NSE_DEFAULT     2.0f
 #define ALT_M_NSE_DEFAULT       3.0f
 #define MAG_M_NSE_DEFAULT       0.05f
 #define GYRO_P_NSE_DEFAULT      3.0E-02f
@@ -37,15 +37,15 @@
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
 #define VISPOS_MEAS_DELAY       0
-#define VISPOS_M_NSE_DEFAULT    0.01f
-#define VISPOS_I_GATE_DEFAULT   300
+#define VISPOS_M_NSE_DEFAULT    0.1f
+#define VISPOS_I_GATE_DEFAULT   500
 #define CHECK_SCALER_DEFAULT    100
 
 #elif APM_BUILD_TYPE(APM_BUILD_APMrover2)
 // rover defaults
-#define VELNE_M_NSE_DEFAULT     0.5f
+#define VELNE_M_NSE_DEFAULT     1.0f
 #define VELD_M_NSE_DEFAULT      0.7f
-#define POSNE_M_NSE_DEFAULT     1.0f
+#define POSNE_M_NSE_DEFAULT     2.0f
 #define ALT_M_NSE_DEFAULT       3.0f
 #define MAG_M_NSE_DEFAULT       0.05f
 #define GYRO_P_NSE_DEFAULT      3.0E-02f
@@ -65,15 +65,15 @@
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
 #define VISPOS_MEAS_DELAY       0
-#define VISPOS_M_NSE_DEFAULT    0.01f
-#define VISPOS_I_GATE_DEFAULT   300
+#define VISPOS_M_NSE_DEFAULT    0.1f
+#define VISPOS_I_GATE_DEFAULT   500
 #define CHECK_SCALER_DEFAULT    100
 
 #elif APM_BUILD_TYPE(APM_BUILD_ArduPlane)
 // plane defaults
-#define VELNE_M_NSE_DEFAULT     0.5f
+#define VELNE_M_NSE_DEFAULT     1.0f
 #define VELD_M_NSE_DEFAULT      0.7f
-#define POSNE_M_NSE_DEFAULT     1.0f
+#define POSNE_M_NSE_DEFAULT     2.0f
 #define ALT_M_NSE_DEFAULT       3.0f
 #define MAG_M_NSE_DEFAULT       0.05f
 #define GYRO_P_NSE_DEFAULT      3.0E-02f
@@ -93,15 +93,15 @@
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
 #define VISPOS_MEAS_DELAY       0
-#define VISPOS_M_NSE_DEFAULT    0.01f
-#define VISPOS_I_GATE_DEFAULT   300
+#define VISPOS_M_NSE_DEFAULT    0.1f
+#define VISPOS_I_GATE_DEFAULT   500
 #define CHECK_SCALER_DEFAULT    150
 
 #else
 // build type not specified, use copter defaults
-#define VELNE_M_NSE_DEFAULT     0.5f
+#define VELNE_M_NSE_DEFAULT     1.0f
 #define VELD_M_NSE_DEFAULT      0.7f
-#define POSNE_M_NSE_DEFAULT     1.0f
+#define POSNE_M_NSE_DEFAULT     2.0f
 #define ALT_M_NSE_DEFAULT       3.0f
 #define MAG_M_NSE_DEFAULT       0.05f
 #define GYRO_P_NSE_DEFAULT      3.0E-02f
@@ -121,8 +121,8 @@
 #define FLOW_M_NSE_DEFAULT      0.25f
 #define FLOW_I_GATE_DEFAULT     300
 #define VISPOS_MEAS_DELAY       0
-#define VISPOS_M_NSE_DEFAULT    0.01f
-#define VISPOS_I_GATE_DEFAULT   300
+#define VISPOS_M_NSE_DEFAULT    0.1f
+#define VISPOS_I_GATE_DEFAULT   500
 #define CHECK_SCALER_DEFAULT    100
 
 #endif // APM_BUILD_DIRECTORY
@@ -1036,6 +1036,14 @@ void NavEKF2::getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, fl
     if (instance < 0 || instance >= num_cores) instance = primary;
     if (core) {
         core[instance].getFlowDebug(varFlow, gndOffset, flowInnovX, flowInnovY, auxInnov, HAGL, rngInnov, range, gndOffsetErr);
+    }
+}
+
+void NavEKF2::getVisPosDebug(int8_t instance, float &varVisPos, float &visPosInnovX, float &visPosInnovY)
+{
+    if (instance < 0 || instance >= num_cores) instance = primary;
+    if (core) {
+        core[instance].getVisPosDebug( varVisPos,  visPosInnovX,  visPosInnovY);
     }
 }
 
