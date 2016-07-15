@@ -6,7 +6,7 @@
 class LogReader : public DataFlashFileReader
 {
 public:
-    LogReader(AP_AHRS &_ahrs, AP_InertialSensor &_ins, AP_Baro &_baro, Compass &_compass, AP_GPS &_gps, AP_Airspeed &_airspeed, DataFlash_Class &_dataflash, const char **&nottypes);
+    LogReader(AP_AHRS &_ahrs, AP_InertialSensor &_ins, AP_Baro &_baro, AP_VisPos &_vispos, Compass &_compass, AP_GPS &_gps, AP_Airspeed &_airspeed, DataFlash_Class &_dataflash, const char **&nottypes);
     bool wait_type(const char *type);
 
     const Vector3f &get_attitude(void) const { return attitude; }
@@ -38,6 +38,7 @@ private:
     AP_AHRS &ahrs;
     AP_InertialSensor &ins;
     AP_Baro &baro;
+    AP_VisPos &vispos;
     Compass &compass;
     AP_GPS &gps;
     AP_Airspeed &airspeed;

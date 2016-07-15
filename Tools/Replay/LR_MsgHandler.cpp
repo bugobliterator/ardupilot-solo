@@ -113,6 +113,17 @@ void LR_MsgHandler_BARO::process_message(uint8_t *msg)
                 last_update_ms);
 }
 
+void LR_MsgHandler_VPOS::process_message(uint8_t *msg)
+{
+    wait_timestamp_from_msg(msg);
+    uint32_t last_update_ms;
+    if (!field_value(msg, "SampleUS", last_update_ms)) {
+        last_update_ms = 0;
+    }
+    vispos.setHIL(Vector3f(require_field_float(msg, "x"), 
+                require_field_float(msg, "y"), 
+                require_field_float(msg, "z")), last_update_ms);
+}
 
 #define DATA_ARMED                          10
 #define DATA_DISARMED                       11

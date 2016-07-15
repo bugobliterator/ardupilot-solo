@@ -130,6 +130,7 @@ void ReplayVehicle::setup(void)
     barometer.init();
     barometer.setHIL(0);
     barometer.update();
+    vispos.init();
     compass.init();
     ins.set_hil_mode();
 }

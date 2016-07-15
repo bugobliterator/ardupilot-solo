@@ -6,6 +6,7 @@
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Compass/AP_Compass.h>
 #include <AP_Baro/AP_Baro.h>
+#include <AP_VisPos/AP_VisPos.h>
 #include <AP_InertialSensor/AP_InertialSensor.h>
 #include <DataFlash/DataFlash.h>
 
@@ -35,12 +36,13 @@ const struct LogStructure log_structure[] = {
       "CHEK", "QccCLLffff",  "TimeUS,Roll,Pitch,Yaw,Lat,Lng,Alt,VN,VE,VD" }
 };
 
-LogReader::LogReader(AP_AHRS &_ahrs, AP_InertialSensor &_ins, AP_Baro &_baro, Compass &_compass, AP_GPS &_gps, 
+LogReader::LogReader(AP_AHRS &_ahrs, AP_InertialSensor &_ins, AP_Baro &_baro, AP_VisPos &_vispos, Compass &_compass, AP_GPS &_gps, 
                      AP_Airspeed &_airspeed, DataFlash_Class &_dataflash, const char **&_nottypes):
     vehicle(VehicleType::VEHICLE_UNKNOWN),
     ahrs(_ahrs),
     ins(_ins),
     baro(_baro),
+    vispos(_vispos),
     compass(_compass),
     gps(_gps),
     airspeed(_airspeed),
@@ -226,7 +228,10 @@ bool LogReader::handle_log_format_msg(const struct log_Format &f)
 	} else if (streq(name, "BARO")) {
 	  msgparser[f.type] = new LR_MsgHandler_BARO(formats[f.type], dataflash,
                                                   last_timestamp_usec, baro);
-	} else if (streq(name, "ARM")) {
+	} else if (streq(name, "VPOS")) {
+    msgparser[f.type] = new LR_MsgHandler_VPOS(formats[f.type], dataflash,
+                                                  last_timestamp_usec, vispos);
+  } else if (streq(name, "ARM")) {
 	  msgparser[f.type] = new LR_MsgHandler_ARM(formats[f.type], dataflash,
                                                   last_timestamp_usec);
 	} else if (streq(name, "EV")) {

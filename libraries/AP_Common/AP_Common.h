@@ -44,6 +44,12 @@
 #define ToRad(x) radians(x)	// *pi/180
 #define ToDeg(x) degrees(x)	// *180/pi
 
+/* Declare and implement const and non-const versions of the array subscript
+ * operator. The object is treated as an array of type_ values. */
+#define DEFINE_BYTE_ARRAY_METHODS                                                                   \
+    inline uint8_t &operator[](size_t i) { return reinterpret_cast<uint8_t *>(this)[i]; }           \
+    inline uint8_t operator[](size_t i) const { return reinterpret_cast<const uint8_t *>(this)[i]; }
+
 #define LOCATION_ALT_MAX_M  83000   // maximum altitude (in meters) that can be fit into Location structure's alt field
 
 /*

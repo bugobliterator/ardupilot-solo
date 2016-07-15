@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MsgHandler.h"
+#include <AP_VisPos/AP_VisPos.h>
 
 class LR_MsgHandler : public MsgHandler {
 public:
@@ -121,6 +122,18 @@ private:
     AP_Baro &baro;
 };
 
+class LR_MsgHandler_VPOS : public LR_MsgHandler
+{
+public:
+    LR_MsgHandler_VPOS(log_Format &_f, DataFlash_Class &_dataflash,
+                    uint64_t &_last_timestamp_usec, AP_VisPos &_vispos)
+        : LR_MsgHandler(_f, _dataflash, _last_timestamp_usec), vispos(_vispos) { };
+
+    virtual void process_message(uint8_t *msg);
+
+private:
+    AP_VisPos &vispos;
+};
 
 class LR_MsgHandler_Event : public LR_MsgHandler
 {

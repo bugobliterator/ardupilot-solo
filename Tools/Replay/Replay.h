@@ -35,6 +35,7 @@
 #include <AP_AHRS/AP_AHRS.h>
 #include <AP_Compass/AP_Compass.h>
 #include <AP_Baro/AP_Baro.h>
+#include <AP_VisPos/AP_VisPos.h>
 #include <AP_InertialSensor/AP_InertialSensor.h>
 #include <AP_InertialNav/AP_InertialNav.h>
 #include <AP_NavEKF/AP_NavEKF.h>
@@ -72,7 +73,7 @@ public:
     AP_Vehicle::FixedWing aparm;
     AP_Airspeed airspeed{aparm};
     DataFlash_Class dataflash{"Replay v0.1"};
-
+    AP_VisPos vispos{dataflash, ahrs};
 private:
     Parameters g;
 
@@ -120,7 +121,7 @@ private:
     SITL::SITL sitl;
 #endif
 
-    LogReader logreader{_vehicle.ahrs, _vehicle.ins, _vehicle.barometer, _vehicle.compass, _vehicle.gps, _vehicle.airspeed, _vehicle.dataflash, nottypes};
+    LogReader logreader{_vehicle.ahrs, _vehicle.ins, _vehicle.barometer, _vehicle.vispos, _vehicle.compass, _vehicle.gps, _vehicle.airspeed, _vehicle.dataflash, nottypes};
 
     FILE *plotf;
     FILE *plotf2;

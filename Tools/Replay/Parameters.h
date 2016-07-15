@@ -10,6 +10,7 @@ public:
     enum {
         k_param_dummy,
         k_param_barometer,
+        k_param_vispos,
         k_param_ins,
         k_param_ahrs,
         k_param_airspeed,

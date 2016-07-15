@@ -33,4 +33,5 @@ void AP_VisPos_MAVLink::handle_raw_vispos_report(mavlink_channel_t chan, mavlink
 	    q3				:	0
     };
     _frontend->_dataflash.WriteBlock(&pkt_vispos, sizeof(pkt_vispos));
+	_frontend->_ahrs.get_NavEKF2().writeVisPosMeas(Vector2f(pkt.x,pkt.y), pkt.time_boot_ms);
 }
