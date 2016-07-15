@@ -91,7 +91,7 @@ bool NavEKF2_core::setup_core(NavEKF2 *_frontend, uint8_t _imu_index, uint8_t _c
     if(!storedOF.init(OBS_BUFFER_LENGTH)) {
         return false;
     }
-    if(!storedVP.init(OBS_BUFFER_LENGTH)) {
+    if(!storedVP.init(VIS_OBS_BUFFER_LENGTH)) {
         return false;
     }
     if(!storedRange.init(OBS_BUFFER_LENGTH)) {
