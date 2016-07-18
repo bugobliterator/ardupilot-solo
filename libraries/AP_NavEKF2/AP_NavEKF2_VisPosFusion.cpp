@@ -54,7 +54,7 @@ void NavEKF2_core::SelectVisPosFusion()
         ResetPosition();
     }
     // Fuse visPos data into the main filter if not excessively tilted and we are in the correct mode
-    if (visPosDataToFuse && (PV_AidingMode == AID_VISPOS || PV_AidingMode == AID_ABSOLUTE))
+    if (visPosDataToFuse && (PV_AidingMode == AID_VISPOS))// || PV_AidingMode == AID_ABSOLUTE))
     {
         // Set the visPos noise used by the fusion processes
         R_LPOS = sq(MAX(frontend->_visPosNoise, 0.001f));
