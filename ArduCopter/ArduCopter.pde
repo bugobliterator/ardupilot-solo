@@ -776,6 +776,7 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
     { update_copter_leds,   40,      5 },
 #endif
     { update_mount,          8,     45 },
+    { gmb_att_update,      400,    100 },
     { ten_hz_logging_loop,  40,     30 },
     { fifty_hz_logging_loop, 8,     22 },
     { full_rate_logging_loop,1,     22 },
@@ -981,6 +982,14 @@ static void update_mount()
 
 #if CAMERA == ENABLED
     camera.trigger_pic_cleanup();
+#endif
+}
+
+static void gmb_att_update()
+{
+#if MOUNT == ENABLED
+    // update camera mount's position
+    camera_mount.gmb_att_update();
 #endif
 }
 
