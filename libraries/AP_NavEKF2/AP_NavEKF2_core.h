@@ -180,7 +180,7 @@ public:
     // msecFlowMeas is the scheduler time in msec when the optical flow data was received from the sensor.
     void  writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, Vector2f &rawGyroRates, uint32_t &msecFlowMeas);
 
-    void writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas);
+    void writeVisPosMeas(Vector3f Position, uint32_t msecVisPosMeas);
 
     // return data for debugging optical flow fusion
     void getFlowDebug(float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr) const;
@@ -390,7 +390,7 @@ private:
 
 
     struct vp_elements {
-        Vector2f    pos;      // 0..1
+        Vector3f    pos;      // 0..1
         uint32_t    time_ms;  // 3
     };
 

@@ -140,7 +140,7 @@ void NavEKF2_core::writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRa
 /********************************************************
 *                      VISUAL POSITION                  *
 ********************************************************/
-void NavEKF2_core::writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas)
+void NavEKF2_core::writeVisPosMeas(Vector3f Position, uint32_t msecVisPosMeas)
 {
     visPosMeaTime_ms = msecVisPosMeas;
     if (frontend->_fusionModeGPS == 4) {

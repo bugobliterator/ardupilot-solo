@@ -1020,7 +1020,7 @@ void NavEKF2::writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, 
     }
 }
 
-void NavEKF2::writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas)
+void NavEKF2::writeVisPosMeas(Vector3f Position, uint32_t msecVisPosMeas)
 {
     if (core) {
         for (uint8_t i=0; i<num_cores; i++) {

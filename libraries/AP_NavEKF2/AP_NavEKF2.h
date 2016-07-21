@@ -193,7 +193,7 @@ public:
     // msecFlowMeas is the scheduler time in msec when the optical flow data was received from the sensor.
     void  writeOptFlowMeas(uint8_t &rawFlowQuality, Vector2f &rawFlowRates, Vector2f &rawGyroRates, uint32_t &msecFlowMeas);
 
-    void writeVisPosMeas(Vector2f Position, uint32_t msecVisPosMeas);
+    void writeVisPosMeas(Vector3f Position, uint32_t msecVisPosMeas);
 
     // return data for debugging optical flow fusion for the specified instance
     // An out of range instance (eg -1) returns data for the the primary instance

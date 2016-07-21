@@ -34,9 +34,9 @@ void AP_VisPos_MAVLink::handle_raw_vispos_report(mavlink_channel_t chan, mavlink
     };
     Vector3f rotated_pos;
     Matrix3f rot_mat( 0.0, 0.0,  1.0,
-    				  1.0, 0.0,  0.0,
+    				          1.0, 0.0,  0.0,
                       0.0, 1.0,  0.0);
     rotated_pos = rot_mat*Vector3f(pkt.x,pkt.y,pkt.z);
     _frontend->_dataflash.WriteBlock(&pkt_vispos, sizeof(pkt_vispos));
-	_frontend->_ahrs.get_NavEKF2().writeVisPosMeas(Vector2f(rotated_pos.x,rotated_pos.y), pkt.time_boot_ms);
+	_frontend->_ahrs.get_NavEKF2().writeVisPosMeas(Vector3f(rotated_pos.x,rotated_pos.y,rotated_pos.z), pkt.time_boot_ms);
 }

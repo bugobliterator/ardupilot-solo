@@ -13,6 +13,7 @@
 
 extern const AP_HAL::HAL& hal;
 
+static bool target_pos_set;
 /********************************************************
 *                   RESET FUNCTIONS                     *
 ********************************************************/
@@ -54,7 +55,7 @@ void NavEKF2_core::SelectVisPosFusion()
         ResetPosition();
     }
     // Fuse visPos data into the main filter if not excessively tilted and we are in the correct mode
-    if (visPosDataToFuse && (PV_AidingMode == AID_VISPOS))// || PV_AidingMode == AID_ABSOLUTE))
+    if (visPosDataToFuse && (PV_AidingMode == AID_VISPOS || PV_AidingMode == AID_ABSOLUTE))
     {
         // Set the visPos noise used by the fusion processes
         R_LPOS = sq(MAX(frontend->_visPosNoise, 0.001f));
@@ -74,7 +75,7 @@ void NavEKF2_core::FuseVisPos()
 {
     Vector24 H_LPOS;
     Vector2 lpos;
-
+    static Vector3f target_pos_ef;
     // Copy required states to local variable names
     float q0  = stateStruct.quat[0];
     float q1 = stateStruct.quat[1];
@@ -89,9 +90,13 @@ void NavEKF2_core::FuseVisPos()
     for (int8_t obsIndex=0; obsIndex<=1; obsIndex++) { // fuse X axis data first
 
         // calculate relative position in sensor frame
-        Vector3f pos_ef = stateStruct.position*(-1.0f);
+        Vector3f pos_ef = stateStruct.position;
         stateStruct.quat.rotation_matrix(Tnb_vispos);
-        Vector3f pos_bf = Tnb_vispos.transposed()*(pos_ef);
+        if(!target_pos_set) {
+            target_pos_ef = -Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
+            target_pos_set = true;
+        }
+        Vector3f pos_bf = (Tnb_vispos.transposed()*((target_pos_ef+pos_ef)))*-1.0f;
         lpos[0] = pos_bf.x;
         lpos[1] = pos_bf.y;
         if(core_index ==0)
