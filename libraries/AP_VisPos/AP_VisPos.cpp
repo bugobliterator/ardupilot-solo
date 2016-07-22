@@ -78,6 +78,16 @@ void AP_VisPos::setHIL(Vector3f raw_pos, uint32_t timestamp_ms)
    if (_backend) {
    	_backend->set_local_pos(raw_pos);
    	_backend->set_last_pos_msg_time_ms(timestamp_ms);
-      _ahrs.get_NavEKF2().writeVisPosMeas(Vector2f(raw_pos.x,raw_pos.y), timestamp_ms);
+      Vector3f rotated_pos;
+      
+      Matrix3f rot_mat( 0.0, 0.0,  1.0,
+                        1.0, 0.0,  0.0,
+                        0.0, 1.0,  0.0);
+   /*
+      Matrix3f rot_mat( 1.0, 0.0,  0.0,
+                        0.0, 1.0,  0.0,
+                        0.0, 0.0,  1.0);*/
+      rotated_pos = rot_mat*raw_pos;
+      _ahrs.get_NavEKF2().writeVisPosMeas(Vector3f(rotated_pos.x,rotated_pos.y,rotated_pos.z), timestamp_ms);
    }
 }
