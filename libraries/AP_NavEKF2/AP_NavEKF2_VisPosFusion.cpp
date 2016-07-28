@@ -90,13 +90,13 @@ void NavEKF2_core::FuseVisPos()
     for (int8_t obsIndex=0; obsIndex<=1; obsIndex++) { // fuse X axis data first
 
         // calculate relative position in sensor frame
-        Vector3f pos_ef = stateStruct.position;
         stateStruct.quat.rotation_matrix(Tnb_vispos);
         if(!target_pos_set) {
-            target_pos_ef = -Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
+            target_pos_ef = Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
             target_pos_set = true;
         }
-        Vector3f pos_bf = (Tnb_vispos.transposed()*((target_pos_ef+pos_ef)))*-1.0f;
+        Vector3f meas_abs_pos = target_pos_ef-Tnb_vispos*visPosDataDelayed.pos;
+        Vector3f pos_bf = (Tnb_vispos.transposed())*(target_pos_ef-stateStruct.position);
         lpos[0] = pos_bf.x;
         lpos[1] = pos_bf.y;
         if(core_index ==0)
