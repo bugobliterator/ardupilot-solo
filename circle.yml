@@ -1,0 +1,16 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  cache_directories:
+    - "~/docker"
+
+  override:
+    - mkdir -p ~/docker
+    - if [[ -e ~/docker/image-ardupilot-build.tar ]]; then docker load -i ~/docker/image-ardupilot-build.tar; fi
+    - ./docker/build.sh
+    - docker save ardupilot-build > ~/docker/image-ardupilot-build.tar
+
+  post:
+    - "docker ps --all -q | head -1 | xargs docker logs -t > $CIRCLE_ARTIFACTS/docker-ardupilot-build.log 2>&1"
