@@ -30,3 +30,6 @@ RUN make sitl
 WORKDIR /home/dev/ardupilot/ArduCopter
 RUN git rev-parse --abbrev-ref HEAD | xargs -I {} aws s3 cp ./ArduCopter-v2.px4 s3://heleport-dev/ardupilot/{}/ubuntu/
 RUN git rev-parse --abbrev-ref HEAD | xargs -I {} aws s3 cp ./ArduCopter.elf s3://heleport-dev/ardupilot/{}/ubuntu/
+
+# Copy to our output folder
+RUN cp ./ArduCopter-v2.px4 /home/dev/build && cp ./ArduCopter.elf /home/dev/build

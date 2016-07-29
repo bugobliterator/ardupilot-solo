@@ -18,6 +18,7 @@ dependencies:
     - docker save ardupilot-build > ~/docker/image-ardupilot-build.tar
 
   post:
+    - cp ./build/* $CIRCLE_ARTIFACTS
     - "docker ps --all -q | head -1 | xargs docker logs -t > $CIRCLE_ARTIFACTS/docker-ardupilot-build.log 2>&1"
 
 test:
