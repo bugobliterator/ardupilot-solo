@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/heleport/ardupilot.svg?style=svg)](https://circleci.com/gh/heleport/ardupilot)
+[![CircleCI](https://circleci.com/gh/heleport/ardupilot/tree/visualpos.svg?style=svg)](https://circleci.com/gh/heleport/ardupilot/tree/visualpos)
 
 # Automated builds
 
