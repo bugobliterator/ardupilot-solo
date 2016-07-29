@@ -1,13 +1,13 @@
+machine:
+  services:
+    - docker
+
 checkout:
   post:
     - git submodule sync
     - git submodule update --init
 
-machine:
-  services:
-    - docker
-
-tests:
+test:
   cache_directories:
     - "~/docker"
 
