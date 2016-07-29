@@ -7,7 +7,7 @@ checkout:
     - git submodule sync
     - git submodule update --init
 
-test:
+dependencies:
   cache_directories:
     - "~/docker"
 
@@ -19,3 +19,7 @@ test:
 
   post:
     - "docker ps --all -q | head -1 | xargs docker logs -t > $CIRCLE_ARTIFACTS/docker-ardupilot-build.log 2>&1"
+
+test:
+  override:
+    - echo "test"
