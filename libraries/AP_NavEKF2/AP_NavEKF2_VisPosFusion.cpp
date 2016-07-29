@@ -95,7 +95,7 @@ void NavEKF2_core::FuseVisPos()
             target_pos_ef = Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
             target_pos_set = true;
         }
-        Vector3f meas_abs_pos = target_pos_ef-Tnb_vispos*visPosDataDelayed.pos;
+        //Vector3f meas_abs_pos = target_pos_ef-Tnb_vispos*visPosDataDelayed.pos;
         Vector3f pos_bf = (Tnb_vispos.transposed())*(target_pos_ef-stateStruct.position);
         lpos[0] = pos_bf.x;
         lpos[1] = pos_bf.y;
