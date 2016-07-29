@@ -2,7 +2,7 @@
 
 # Automated builds
 
-Builds are done on CircleCI, firmware is uploaded to `s3://heleport-dev/ardupilot/&lt;branchname&gt;/ubuntu`, eg:
+Builds are done on CircleCI, firmware is uploaded to `s3://heleport-dev/ardupilot/<branchname>/ubuntu`, eg:
 * https://s3-us-west-1.amazonaws.com/heleport-dev/ardupilot/visualpos/ubuntu/ArduCopter-v2.px4
 * https://s3-us-west-1.amazonaws.com/heleport-dev/ardupilot/visualpos/ubuntu/ArduCopter.elf
 
