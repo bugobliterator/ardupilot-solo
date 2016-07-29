@@ -8,12 +8,10 @@ Builds are done on CircleCI, firmware is uploaded to `s3://heleport-dev/ardupilo
 
 # Load new firmware
 
-## Build Arducopter
-
 ## Update firmware
 
 * `scp ArduCopter-v2.px4 solo:/firmware`
-* Restart solo
+* Restart the solo
 
 ## Connect with mavlink
 
