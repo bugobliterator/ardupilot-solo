@@ -3,4 +3,4 @@ set -e
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 mkdir "$DIR/../build"
 OUTPUT_PATH=$( cd "$DIR/../build" && pwd )
-docker run -t ardupilot-build -v $OUTPUT_PATH:/home/dev/build .
+docker run -a stderr -a stdout -v $OUTPUT_PATH:/home/dev/build ardupilot-build
