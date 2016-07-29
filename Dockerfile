@@ -30,7 +30,7 @@ RUN mv ./ArduCopter.elf ./ArduCopter-ubuntu.elf
 # Upload to S3
 WORKDIR /home/dev/ardupilot/ArduCopter
 RUN git rev-parse --abbrev-ref HEAD | xargs -I {} aws s3 cp ./ArduCopter-v2.px4 s3://heleport-dev/ardupilot/{}/
-RUN git rev-parse --abbrev-ref HEAD | xargs -I {} aws s3 cp ./ArduCopter.elf s3://heleport-dev/ardupilot/{}/
+RUN git rev-parse --abbrev-ref HEAD | xargs -I {} aws s3 cp ./ArduCopter-ubuntu.elf s3://heleport-dev/ardupilot/{}/
 
 # Copy to our output folder
 CMD cp ./ArduCopter-v2.px4 /home/dev/build && cp ./ArduCopter-ubuntu.elf /home/dev/build
