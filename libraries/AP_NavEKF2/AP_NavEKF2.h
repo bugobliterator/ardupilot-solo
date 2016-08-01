@@ -200,7 +200,7 @@ public:
     void getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr);
 
     // return data for debugging visPos fusion for the specified instance
-    void getVisPosDebug(int8_t instance, float &varVisPos, float &visPosInnovX, float &visPosInnovY);
+    void getVisPosDebug(int8_t instance, float &varVisPos, float &visPosInnovX, float &visPosInnovY, float &visPosInnovZ);
 
     // called by vehicle code to specify that a takeoff is happening
     // causes the EKF to compensate for expected barometer errors due to ground effect

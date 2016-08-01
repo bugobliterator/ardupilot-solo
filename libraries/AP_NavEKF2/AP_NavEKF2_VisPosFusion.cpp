@@ -74,7 +74,7 @@ void NavEKF2_core::SelectVisPosFusion()
 void NavEKF2_core::FuseVisPos()
 {
     Vector24 H_LPOS;
-    Vector2 lpos;
+    Vector3 lpos;
     static Vector3f target_pos_ef;
     // Copy required states to local variable names
     float q0  = stateStruct.quat[0];
@@ -84,21 +84,25 @@ void NavEKF2_core::FuseVisPos()
     float pn = stateStruct.position.x;
     float pe = stateStruct.position.y;
     float pd = stateStruct.position.z;
-
+    debug_pos = Tnb_vispos*visPosDataDelayed.pos;
+    // calculate relative position in sensor frame
+    stateStruct.quat.rotation_matrix(Tnb_vispos);
+    if(!target_pos_set) {
+        if(stateStruct.position.z > -1.0f) {     //do not initialise if altitude is below half meter
+            return;
+        }
+        target_pos_ef = Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
+        target_pos_set = true;
+    }
+    //Vector3f meas_abs_pos = target_pos_ef-Tnb_vispos*visPosDataDelayed.pos;
+    Vector3f pos_bf = (Tnb_vispos.transposed())*(target_pos_ef-stateStruct.position);
+    lpos[0] = pos_bf.x;
+    lpos[1] = pos_bf.y;
+    lpos[2] = pos_bf.z;
     //hal.console->printf("\n");
     // Fuse X and Y axis measurements sequentially assuming observation errors are uncorrelated
-    for (int8_t obsIndex=0; obsIndex<=1; obsIndex++) { // fuse X axis data first
+    for (int8_t obsIndex=0; obsIndex<=2; obsIndex++) { // fuse X axis data first
 
-        // calculate relative position in sensor frame
-        stateStruct.quat.rotation_matrix(Tnb_vispos);
-        if(!target_pos_set) {
-            target_pos_ef = Tnb_vispos*visPosDataDelayed.pos+stateStruct.position;
-            target_pos_set = true;
-        }
-        //Vector3f meas_abs_pos = target_pos_ef-Tnb_vispos*visPosDataDelayed.pos;
-        Vector3f pos_bf = (Tnb_vispos.transposed())*(target_pos_ef-stateStruct.position);
-        lpos[0] = pos_bf.x;
-        lpos[1] = pos_bf.y;
         if(core_index ==0)
         {       //hal.console->printf("Meas: %f %f Data Before: %f %f\n", visPosDataDelayed.pos.x,visPosDataDelayed.pos.y , pos_bf.x, pos_bf.y);
                 //hal.console->printf("Obs Index %u \n", obsIndex);
@@ -234,7 +238,7 @@ void NavEKF2_core::FuseVisPos()
                 }
             }
 
-        } else {
+        } else if (obsIndex == 1) {
             float t2 = q0*q0;
             float t3 = q1*q1;
             float t4 = q2*q2;
@@ -362,6 +366,136 @@ void NavEKF2_core::FuseVisPos()
                     Kfusion[i] = 0.0f;
                 }
             }
+        }  else {
+            float t2 = q0*q0;
+            float t3 = q1*q1;
+            float t4 = q2*q2;
+            float t5 = q3*q3;
+            float t6 = q0*q3*2.0;
+            float t7 = q0*q2*2.0;
+            float t8 = q0*q1*2.0;
+            float t9 = q2*q3*2.0;
+            H_LPOS[0] = pd*(t8+t9)+pe*(t2-t3+t4-t5)-pn*(t6-q1*q2*2.0);
+            H_LPOS[1] = -pn*(t2+t3-t4-t5)+pd*(t7-q1*q3*2.0)-pe*(t6+q1*q2*2.0);
+            H_LPOS[6] = -t7-q1*q3*2.0;
+            H_LPOS[7] = t8-t9;
+            H_LPOS[8] = -t2+t3+t4-t5;
+
+            t2 = q0*q0;
+            t3 = q1*q1;
+            t4 = q2*q2;
+            t5 = q3*q3;
+            t6 = q0*q1*2.0;
+            t7 = q0*q2*2.0;
+            t8 = q1*q3*2.0;
+            t9 = q0*q3*2.0;
+            float t10 = t7+t8;
+            float t11 = t2-t3-t4+t5;
+            float t12 = q2*q3*2.0;
+            float t13 = t2-t3+t4-t5;
+            float t14 = pe*t13;
+            float t15 = t6+t12;
+            float t16 = pd*t15;
+            float t17 = q1*q2*2.0;
+            float t18 = t2+t3-t4-t5;
+            float t19 = pn*t18;
+            float t20 = t7-t8;
+            float t21 = t9+t17;
+            float t22 = pe*t21;
+            float t27 = pd*t20;
+            float t23 = t19+t22-t27;
+            float t24 = t6-t12;
+            float t25 = t9-t17;
+            float t28 = pn*t25;
+            float t26 = t14+t16-t28;
+            float t29 = P[1][1]*t23;
+            float t30 = P[8][6]*t11;
+            float t31 = P[6][6]*t10;
+            float t32 = P[1][6]*t23;
+            float t54 = P[7][6]*t24;
+            float t55 = P[0][6]*t26;
+            float t33 = t30+t31+t32-t54-t55;
+            float t34 = t10*t33;
+            float t35 = P[8][7]*t11;
+            float t36 = P[6][7]*t10;
+            float t37 = P[1][7]*t23;
+            float t56 = P[7][7]*t24;
+            float t57 = P[0][7]*t26;
+            float t38 = t35+t36+t37-t56-t57;
+            float t39 = P[8][0]*t11;
+            float t40 = P[6][0]*t10;
+            float t41 = P[1][0]*t23;
+            float t59 = P[7][0]*t24;
+            float t60 = P[0][0]*t26;
+            float t42 = t39+t40+t41-t59-t60;
+            float t43 = P[8][1]*t11;
+            float t44 = P[6][1]*t10;
+            float t62 = P[7][1]*t24;
+            float t63 = P[0][1]*t26;
+            float t45 = t29+t43+t44-t62-t63;
+            float t46 = t23*t45;
+            float t47 = P[8][8]*t11;
+            float t48 = P[6][8]*t10;
+            float t49 = P[1][8]*t23;
+            float t64 = P[7][8]*t24;
+            float t65 = P[0][8]*t26;
+            float t50 = t47+t48+t49-t64-t65;
+            float t51 = t11*t50;
+            float t58 = t24*t38;
+            float t61 = t26*t42;
+            float t52 = R_LPOS+t34+t46+t51-t58-t61;
+            float t53 = 1.0/t52;
+            // calculate innovation variance for X axis observation and protect against a badly conditioned calculation
+            if (t52 > R_LPOS) {
+                t53 = 1.0f/t52;
+                faultStatus.bad_yvispos = false;
+            } else {
+                t52 = 0.0f;
+                t53 = 1.0f/R_LPOS;
+                faultStatus.bad_yvispos = true;
+                return;
+            }
+            varInnovVisPos[2] = t52;
+
+            // calculate innovation for Y observation
+            innovVisPos[2] = lpos[2] - visPosDataDelayed.pos.z;
+
+            // calculate Kalman gains for the Y-axis observation
+            Kfusion[0] = -t53*(P[0][6]*t10+P[0][8]*t11+P[0][1]*t23-P[0][0]*t26-P[0][7]*t24);
+            Kfusion[1] = -t53*(t29+P[1][6]*t10+P[1][8]*t11-P[1][0]*t26-P[1][7]*t24);
+            Kfusion[2] = -t53*(P[2][6]*t10+P[2][8]*t11+P[2][1]*t23-P[2][0]*t26-P[2][7]*t24);
+            Kfusion[3] = -t53*(P[3][6]*t10+P[3][8]*t11+P[3][1]*t23-P[3][0]*t26-P[3][7]*t24);
+            Kfusion[4] = -t53*(P[4][6]*t10+P[4][8]*t11+P[4][1]*t23-P[4][0]*t26-P[4][7]*t24);
+            Kfusion[5] = -t53*(P[5][6]*t10+P[5][8]*t11+P[5][1]*t23-P[5][0]*t26-P[5][7]*t24);
+            Kfusion[6] = -t53*(t31+P[6][8]*t11+P[6][1]*t23-P[6][0]*t26-P[6][7]*t24);
+            Kfusion[7] = -t53*(-t56+P[7][6]*t10+P[7][8]*t11+P[7][1]*t23-P[7][0]*t26);
+            Kfusion[8] = -t53*(t47+P[8][6]*t10+P[8][1]*t23-P[8][0]*t26-P[8][7]*t24);
+            Kfusion[9] = -t53*(P[9][6]*t10+P[9][8]*t11+P[9][1]*t23-P[9][0]*t26-P[9][7]*t24);
+            Kfusion[10] = -t53*(P[10][6]*t10+P[10][8]*t11+P[10][1]*t23-P[10][0]*t26-P[10][7]*t24);
+            Kfusion[11] = -t53*(P[11][6]*t10+P[11][8]*t11+P[11][1]*t23-P[11][0]*t26-P[11][7]*t24);
+            Kfusion[12] = -t53*(P[12][6]*t10+P[12][8]*t11+P[12][1]*t23-P[12][0]*t26-P[12][7]*t24);
+            Kfusion[13] = -t53*(P[13][6]*t10+P[13][8]*t11+P[13][1]*t23-P[13][0]*t26-P[13][7]*t24);
+            Kfusion[14] = -t53*(P[14][6]*t10+P[14][8]*t11+P[14][1]*t23-P[14][0]*t26-P[14][7]*t24);
+            Kfusion[15] = -t53*(P[15][6]*t10+P[15][8]*t11+P[15][1]*t23-P[15][0]*t26-P[15][7]*t24);
+            if (!inhibitWindStates) {
+                Kfusion[22] = -t53*(P[22][6]*t10+P[22][8]*t11+P[22][1]*t23-P[22][0]*t26-P[22][7]*t24);
+                Kfusion[23] = -t53*(P[23][6]*t10+P[23][8]*t11+P[23][1]*t23-P[23][0]*t26-P[23][7]*t24);
+            } else {
+                Kfusion[22] = 0.0f;
+                Kfusion[23] = 0.0f;
+            }
+            if (!inhibitMagStates) {
+                Kfusion[16] = -t53*(P[16][6]*t10+P[16][8]*t11+P[16][1]*t23-P[16][0]*t26-P[16][7]*t24);
+                Kfusion[17] = -t53*(P[17][6]*t10+P[17][8]*t11+P[17][1]*t23-P[17][0]*t26-P[17][7]*t24);
+                Kfusion[18] = -t53*(P[18][6]*t10+P[18][8]*t11+P[18][1]*t23-P[18][0]*t26-P[18][7]*t24);
+                Kfusion[19] = -t53*(P[19][6]*t10+P[19][8]*t11+P[19][1]*t23-P[19][0]*t26-P[19][7]*t24);
+                Kfusion[20] = -t53*(P[20][6]*t10+P[20][8]*t11+P[20][1]*t23-P[20][0]*t26-P[20][7]*t24);
+                Kfusion[21] = -t53*(P[21][6]*t10+P[21][8]*t11+P[21][1]*t23-P[21][0]*t26-P[21][7]*t24);
+            } else {
+                for (uint8_t i = 16; i <= 21; i++) {
+                    Kfusion[i] = 0.0f;
+                }
+            }
         }
         if(obsIndex == 0){
             H_LPOS[0] = 0.0f;
@@ -370,8 +504,10 @@ void NavEKF2_core::FuseVisPos()
             //for(uint8_t i=6; i<=8; i++)
                 //hal.console->printf("%f ",H_LPOS[i]);                
             //hal.console->printf("\n");
-        } else {
+        } else if(obsIndex == 1){
             H_LPOS[1] = 0.0f;
+        } else {
+            H_LPOS[2] = 0.0f;
         }
 
         // calculate the innovation consistency test ratio
@@ -401,11 +537,8 @@ void NavEKF2_core::FuseVisPos()
             for (unsigned j = 0; j<=stateIndexLim; j++) {
                 for (unsigned i = 0; i<=stateIndexLim; i++) {
                     ftype res = 0;
-                    if (obsIndex == 1){
-                        res += KH[i][0] * P[0][j];
-                    } else {
-                        res += KH[i][1] * P[1][j];
-                    }
+                    res += KH[i][0] * P[0][j];
+                    res += KH[i][1] * P[1][j];
                     res += KH[i][2] * P[2][j];
                     res += KH[i][6] * P[6][j];
                     res += KH[i][7] * P[7][j];

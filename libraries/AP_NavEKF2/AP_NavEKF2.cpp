@@ -146,7 +146,7 @@ const AP_Param::GroupInfo NavEKF2::var_info[] = {
     // @Description: This controls use of GPS measurements : 0 = use 3D velocity & 2D position, 1 = use 2D velocity and 2D position, 2 = use 2D position, 3 = use no GPS (optical flow will be used if available)
     // @Values: 0:GPS 3D Vel and 2D Pos, 1:GPS 2D vel and 2D pos, 2:GPS 2D pos, 3:No GPS use optical flow, 4:No GPS use visual Pos
     // @User: Advanced
-    AP_GROUPINFO("GPS_TYPE", 1, NavEKF2, _fusionModeGPS, 0),
+    AP_GROUPINFO("GPS_TYPE", 1, NavEKF2, _fusionModeGPS, 1),
 
     // @Param: VELNE_M_NSE
     // @DisplayName: GPS horizontal velocity measurement noise (m/s)
@@ -1039,11 +1039,11 @@ void NavEKF2::getFlowDebug(int8_t instance, float &varFlow, float &gndOffset, fl
     }
 }
 
-void NavEKF2::getVisPosDebug(int8_t instance, float &varVisPos, float &visPosInnovX, float &visPosInnovY)
+void NavEKF2::getVisPosDebug(int8_t instance, float &varVisPos, float &visPosInnovX, float &visPosInnovY, float &visPosInnovZ)
 {
     if (instance < 0 || instance >= num_cores) instance = primary;
     if (core) {
-        core[instance].getVisPosDebug( varVisPos,  visPosInnovX,  visPosInnovY);
+        core[instance].getVisPosDebug( varVisPos,  visPosInnovX,  visPosInnovY, visPosInnovZ);
     }
 }
 

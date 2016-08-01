@@ -185,7 +185,7 @@ public:
     // return data for debugging optical flow fusion
     void getFlowDebug(float &varFlow, float &gndOffset, float &flowInnovX, float &flowInnovY, float &auxInnov, float &HAGL, float &rngInnov, float &range, float &gndOffsetErr) const;
 
-    void getVisPosDebug(float &varVisPos, float &visPosInnovX, float &visPosInnovY);
+    void getVisPosDebug(float &varVisPos, float &visPosInnovX, float &visPosInnovY, float &visPosInnovZ);
 
     // called by vehicle code to specify that a takeoff is happening
     // causes the EKF to compensate for expected barometer errors due to ground effect
@@ -849,10 +849,11 @@ private:
     //variables for vispos data fusion
     Matrix3f Tnb_vispos;            // transformation matrix from nav to body axes at the middle of the visual Position sample period
     Matrix3f Tbn_vispos;            // transformation matrix from body to nav axes at the middle of the visual Position sample period
-    Vector2 varInnovVisPos;         // visual position innovations variances (rad/sec)^2
-    Vector2 innovVisPos;            // visual position LOS innovations (rad/sec)
-    Vector2 flowTestRatio;          // square of Visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
-    Vector2 visPosTestRatio;        // square of visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
+    Vector3 varInnovVisPos;         // visual position innovations variances (rad/sec)^2
+    Vector3 innovVisPos;            // visual position LOS innovations (rad/sec)
+    Vector3 flowTestRatio;          // square of Visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
+    Vector3 visPosTestRatio;        // square of visual Position innovations divided by fail threshold used by main filter where >1.0 is a fail
+    Vector3f debug_pos;
     bool visPosDataToFuse;          // true when Visual Position data has is ready for fusion
     bool visPosDataValid;           // true while Visual Position data is still fresh
     bool visPosFusionDelayed;

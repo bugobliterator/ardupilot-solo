@@ -79,11 +79,12 @@ void NavEKF2_core::getFlowDebug(float &varFlow, float &gndOffset, float &flowInn
 }
 
 // return data for debugging visual position fusion
-void NavEKF2_core::getVisPosDebug(float &varVisPos, float &visPosInnovX, float &visPosInnovY)
+void NavEKF2_core::getVisPosDebug(float &varVisPos, float &visPosInnovX, float &visPosInnovY, float &visPosInnovZ)
 {
     varVisPos = MAX(visPosTestRatio[0],visPosTestRatio[1]);
     visPosInnovX = innovVisPos[0];
     visPosInnovY = innovVisPos[1];
+    visPosInnovZ = innovVisPos[2];
 }
 
 // provides the height limit to be observed by the control loops
